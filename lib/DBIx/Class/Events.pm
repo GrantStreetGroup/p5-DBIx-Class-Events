@@ -100,14 +100,16 @@ sub update {
 sub delete {
     my ( $obj, @args ) = @_;
 
-    # I don't know how you actually call delete on the Result Class
-    # but apparently it's possible, however we can't log it in that case.
+    my $ret = $obj->next::method(@args);
+
+    # DBIx::Class::Row::delete has a special edge case for calling
+    # delete as a class method, we however can't log it in that case.
     if ( ref $obj ) {
         my %deleted = $obj->get_columns;
         $obj->event( delete => { %deleted, details => \%deleted } );
     }
 
-    $obj->next::method(@args);
+    return $ret;
 };
 
 1;
