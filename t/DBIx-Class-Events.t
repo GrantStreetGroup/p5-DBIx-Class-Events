@@ -279,14 +279,6 @@ $schema->txn_do( sub {
         artistid => $artist->id,
     }, "State at insert is as expected";
 
-    # This is a format that DBD::SQLite likes
-    is_deeply $cd->state_at( $update_ts->datetime(q{ }) ), {
-        cdid     => $cd->id,
-        title    => 'A CD',
-        year     => 1999,
-        artistid => $artist->id,
-    }, "State at update is as expected";
-
     my $dtf = $schema->storage->datetime_parser;
     is_deeply $cd->state_at( $dtf->format_datetime($update_ts) ), {
         cdid     => $cd->id,
