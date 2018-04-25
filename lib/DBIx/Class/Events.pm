@@ -129,6 +129,9 @@ __END__
     my $name_change = $artist->last_name_change;
     print $name_change->details->{old}, "\n";
 
+See C<change_name> and C<last_name_change> example definitions
+in L</CONFIGURATION AND ENVIRONMENT>.
+
     # Three more name_change events and one update event
     $artist->change_name('Fried Trout');
     $artist->change_name('Poached Trout in a White Wine Sauce');
@@ -170,8 +173,9 @@ __END__
         = $artist->event( death => { details => { who => 'drummer' } } );
 
     # but, we then go back and modify it to note that it was only a rumor
-    $death_event->update(
-        { details => { %{ $death_event->details }, only_a_rumour => 1 } } );
+    $death_event->details->{only_a_rumour} = 1;
+    $death_event->make_column_dirty('details'); # changing the hashref doesn't
+    $death_event->update
 
     # And after even more new names and arguments, they split up again
     $artist->delete;
@@ -187,40 +191,33 @@ This is useful for both being able to see the history of things
 in the database as well as logging when events happen that
 can be looked up later.
 
-Events can be used to track
-when a user on a website clicks a particular button,
-when a recipe was last prepared,
-or when anything happens that doesn't fit in the main table.
+Events can be used to track when things happen.
 
-=head1 SETUP
+=over
 
-=head2 events_relationship
+=item when a user on a website clicks a particular button
 
-An attribute that returns the relationship to get from your object
-to the relationship.
+=item when a recipe was prepared
 
-By default, C<events>, but you can overide it.
+=item when a song was played
 
-    __PACKAGE__->has_many(
-        'cd_events' =>
-            ( 'MyApp::Schema::Result::ArtistEvents', 'cdid' ),
-        { cascade_delete => 0 },
-    );
+=item anything that doesn't fit in the main table
 
-    __PACKAGE__->events_relationship('cd_events');
+=back
 
-=head2 event_defaults
+=head1 BUGS AND LIMITATIONS
 
-Returns an even-sized list of default values that will be used
-when creating a new event.
+There is no attempt to handle bulk updates or deletes,
+so any changes to the database made by calling
+L<"update"|DBIx::Class::ResultSet/update> or L<DBIx::Class::ResultSet/delete>
+will not create events the same as manual database modifications.
 
-    my %defaults = $object->event_defaults( $event_type, \%col_data );
+Use the C<update_all> and C<delete_all> methods of the C<ResultSet> if you
+want these triggers.
 
-The C<$event_type> is a string defining the "type" of event being created.
-The C<%col_data> is a reference to the parameters passed in.
-
-No default values, but if your database doesn't set a default for
-C<triggered_on> you may want to set it to a C<< DateTime->now >> object.
+There are three required columns on the L</events_relationship> table,
+C<event>, C<triggered_on>, and C<details>.
+We should eventually make those configurable.
 
 =head1 METHODS
 
@@ -230,12 +227,13 @@ Inserts a new event with L</event_defaults>.
 
     my $new_event = $artist->event( $event => \%params );
 
-Filters C<%params> so only valid L</events_relationship> C<columns> are
-passed to C<create_related> to create the event.
+First the L</event_defaults> method is called to build a list of values
+to set on the new event.
+This method is passed the C<$event> and a reference to C<%params>
+the return value is not checked for having valid columns.
 
-The C<$event> and a reference to C<%params> are passed to L</event_defaults>,
-which, although overridden by the chosen columns in C<%params>,
-is not checked for having valid columns.
+Then the C<%params>, filtered for valid L</events_relationship> C<columns>,
+are added to the C<create_related> arguments, overriding the defaults.
 
 =head2 state_at
 
@@ -263,12 +261,59 @@ This is done in context of searching the events table.
 
 =head1 PRECONFIGURED EVENTS
 
-Automatically creates Events for C<insert>, C<update>, and C<delete> calls.
+Automatically creates Events for actions that modify a row.
 
-Logs the modified columns, or all columns for a C<delete> event,
-to the C<details> column of the event.
+See the L</BUGS AND LIMITATIONS> of bulk modifications on events.
+
+=over
+
+=item insert
+
+Logs all columns to the C<details> column.
+
+=item update
+
+Logs dirty columns to the C<details> column.
+
+=item delete
+
+Logs all columns to the C<details> column.
+
+=back
 
 =head1 CONFIGURATION AND ENVIRONMENT
+
+=head2 event_defaults
+
+A method that returns an even-sized list of default values that will be used
+when creating a new event.
+
+    my %defaults = $object->event_defaults( $event_type, \%col_data );
+
+The C<$event_type> is a string defining the "type" of event being created.
+The C<%col_data> is a reference to the parameters passed in.
+
+No default values, but if your database doesn't set a default for
+C<triggered_on> you may want to set it to a C<< DateTime->now >> object.
+
+=head2 events_relationship
+
+An class accessor that returns the relationship to get from your object
+to the relationship.
+
+By default, C<events>, but you can overide it.
+
+    __PACKAGE__->has_many(
+        'cd_events' =>
+            ( 'MyApp::Schema::Result::ArtistEvents', 'cdid' ),
+        { cascade_delete => 0 },
+    );
+
+    __PACKAGE__->events_relationship('cd_events');
+
+=head2 Tables
+
+=head3 Table with events
 
 It requires the Component and L</events_relationship> in the Result class:
 
@@ -308,7 +353,7 @@ for example to add events for when an artist changes their name.
         $self->name( $new_name );
     }
 
-And you need a table to store the events:
+=head3 Table holding events
 
 The C<triggered_on> column must either provide a C<DEFAULT> value
 or you should add a default to L</event_defaults>.
@@ -347,7 +392,7 @@ or you should add a default to L</event_defaults>.
 
     # You should set up automatic inflation/deflation of the details column
     # as it is used this way by "state_at" and the insert/update/delete
-    # events.  Does not have to be JSON, just a able to serialize a hashref.
+    # events.  Does not have to be JSON, just be able to serialize a hashref.
     {
         my $json = JSON->new->utf8;
         __PACKAGE__->inflate_column( 'details' => {
@@ -367,7 +412,7 @@ You probably also want an index for searching for events:
         my ( $self, $sqlt_table ) = @_;
         $sqlt_table->add_index(
             name   => 'artist_event_idx',
-            fields => [ "artistid", "event", "triggered_on" ],
+            fields => [ "artistid", "triggered_on", "event" ],
         );
     }
 
