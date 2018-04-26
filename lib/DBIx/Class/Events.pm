@@ -1,7 +1,7 @@
 package DBIx::Class::Events;
 
 # ABSTRACT: Store Events for your DBIC Results
-# VERSION: 0.01
+# VERSION
 
 use strict;
 use warnings;
