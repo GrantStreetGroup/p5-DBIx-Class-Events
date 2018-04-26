@@ -2,7 +2,7 @@ package MyApp::Schema::Result::TrackEvent;
 
 use warnings;
 use strict;
-use JSON ();
+use JSON::PP ();
 
 use base qw( DBIx::Class::Core );
 
@@ -35,7 +35,7 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key('trackeventid');
 
 {
-    my $json = JSON->new->utf8;
+    my $json = JSON::PP->new->utf8;
     __PACKAGE__->inflate_column( 'details' => {
         inflate => sub { $json->decode(shift) },
         deflate => sub { $json->encode(shift) },
