@@ -31,7 +31,7 @@ sub event {
 }
 
 sub event_columns  { return qw( event triggered_on details ) }
-sub event_defaults { return ( triggered_on => DateTime->now ) }
+sub event_defaults {}
 
 sub state_at {
     my ($self, $time_stamp, @args) = @_;
@@ -227,7 +227,8 @@ when creating a new event.
 The C<$event_type> is a string defining the "type" of event being created.
 The C<%col_data> is a reference to the parameters passed in.
 
-By default sets C<triggered_on> to a C<< DateTime->now >> object.
+No default values, but if your database doesn't set a default for
+C<triggered_on> you may want to set it to a C<< DateTime->now >> object.
 
 =head1 METHODS
 
@@ -317,6 +318,9 @@ for example to add events for when an artist changes their name.
 
 And you need a table to store the events:
 
+The C<triggered_on> column must either provide a C<DEFAULT> value
+or you should add a default to L</event_defaults>.
+
     package MyApp::Schema::Result::ArtistEvent;
 
     use warnings;
@@ -338,8 +342,10 @@ And you need a table to store the events:
 
         # Any other custom columns you want to store for each event.
 
-        # Populated by "event_defaults" when the event is triggered
-        triggered_on => { data_type => 'datetime' },
+        triggered_on => {
+            data_type     => 'datetime',
+            default_value => \'NOW()',
+        },
 
         # Where we store freeform data about what happened
         details => { data_type => 'longtext' },

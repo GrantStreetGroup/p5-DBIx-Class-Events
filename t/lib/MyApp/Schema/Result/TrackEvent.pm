@@ -22,7 +22,7 @@ __PACKAGE__->add_columns(
     data_type => 'varchar',
   },
   triggered_on => {
-    data_type => 'datetime',
+    data_type => 'datetime', default_value => \'NOW()',
   },
   details => {
     data_type => 'longtext',

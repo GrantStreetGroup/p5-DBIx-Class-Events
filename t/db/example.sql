@@ -13,7 +13,7 @@ CREATE TABLE "artist_event" (
     "artisteventid" INTEGER PRIMARY KEY NOT NULL,
     "artistid" INTEGER NOT NULL,
     "event" VARCHAR(32) NOT NULL,
-    "triggered_on" DATETIME NOT NULL,
+    "triggered_on" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "details" LONGTEXT,
   FOREIGN KEY ("artistid") REFERENCES "artist"("artistid") ON UPDATE CASCADE
 );
@@ -36,7 +36,7 @@ CREATE TABLE "cd_event" (
     "cdeventid" INTEGER PRIMARY KEY NOT NULL,
     "cdid" INTEGER NOT NULL,
     "event" VARCHAR(32) NOT NULL,
-    "triggered_on" DATETIME NOT NULL,
+    "triggered_on" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "details" LONGTEXT,
   FOREIGN KEY ("cdid") REFERENCES "cd"("cdid") ON UPDATE CASCADE
 );
@@ -58,7 +58,7 @@ CREATE TABLE "track_event" (
     "trackeventid" INTEGER PRIMARY KEY NOT NULL,
     "trackid" INTEGER NOT NULL,
     "event" VARCHAR(32) NOT NULL,
-    "triggered_on" DATETIME NOT NULL,
+    "triggered_on" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "details" LONGTEXT,
     "title" text NULL,
   FOREIGN KEY ("trackid") REFERENCES "track"("trackid") ON UPDATE CASCADE

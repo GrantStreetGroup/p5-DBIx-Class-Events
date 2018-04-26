@@ -16,6 +16,13 @@ require DateTime::Format::SQLite;
 my $schema = MyApp::Schema->connect('dbi:SQLite:dbname=:memory:');
 
 {
+    my $dtf = $schema->storage->datetime_parser;
+    my $now = sub { $dtf->format_datetime( DateTime->now ) };
+    $schema->storage->dbh->sqlite_create_function(
+        'CURRENT_TIMESTAMP', 0, $now );
+}
+
+{
     my $sql_file = "$Bin/db/example.sql";
     open my $fh, '<', $sql_file or die $!;
     local $/ = ';';
