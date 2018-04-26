@@ -58,11 +58,23 @@ sub state_at {
     my $event = $events->next;
     return undef if !$event or $event->event eq 'delete';
 
-    my %state;
+    my %needed_columns = map { $_ => 1 } $self->columns;
+
+    my %state = map { $_ => $self->get_column($_) }
+        $self->result_source->primary_columns;
+
+    # We'll assume that the primary_columns don't change
+    delete @needed_columns{ keys %state };
+
     while ($event) {
-        %state = ( %{ $event->details || {} }, %state );
+        my %details = %{ $event->details || {} };
+        %state = ( %details, %state );
 
         last if $event->event eq 'insert';
+
+        delete @needed_columns{ keys %details };
+        last unless %needed_columns;
+
         $event = $events->next;
     }
 
