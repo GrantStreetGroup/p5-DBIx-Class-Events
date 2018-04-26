@@ -119,6 +119,20 @@ $schema->txn_do( sub {
 } );
 
 $schema->txn_do( sub {
+    note "Event required";
+
+    my $artist
+        = $schema->resultset('Artist')->create( { name => 'required' } );
+    local $@;
+    eval { local $SIG{__DIE__}; $artist->event };
+    is $@, sprintf( "Event is required at %s line %d.\n",
+        __FILE__, __LINE__ - 2 ),
+        "Expected exception calling event without type";
+
+    $schema->txn_rollback;
+} );
+
+$schema->txn_do( sub {
     note "Something custom event";
 
     my $artist
