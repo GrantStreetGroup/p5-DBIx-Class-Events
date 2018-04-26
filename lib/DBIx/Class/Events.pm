@@ -71,42 +71,42 @@ sub state_at {
 }
 
 sub insert {
-    my ( $class, $col_data ) = @_;
+    my ( $class, @args ) = @_;
 
-    my $obj = $class->next::method($col_data);
+    my $self = $class->next::method(@args);
 
-    my %inserted = $obj->get_columns;
-    $obj->event( insert => { %inserted, details => \%inserted } );
+    my %inserted = $self->get_columns;
+    $self->event( insert => { %inserted, details => \%inserted } );
 
-    return $obj;
+    return $self;
 };
 
 sub update {
-    my ( $obj, $upd ) = @_;
+    my ( $self, @args ) = @_;
 
     # Do this here instead of letting our parent do it
     # so that we can use get_dirty_columns.
-    $obj->set_inflated_columns($upd) if $upd;
+    $self->set_inflated_columns(@args) if @args;
 
-    my %changed = $obj->get_dirty_columns;
+    my %changed = $self->get_dirty_columns;
 
-    $obj->next::method();    # we already set_inflated_columns
+    $self->next::method();    # we already set_inflated_columns
 
-    $obj->event( update => { %changed, details => \%changed } ) if %changed;
+    $self->event( update => { %changed, details => \%changed } ) if %changed;
 
-    return $obj;
+    return $self;
 };
 
 sub delete {
-    my ( $obj, @args ) = @_;
+    my ( $self, @args ) = @_;
 
-    my $ret = $obj->next::method(@args);
+    my $ret = $self->next::method(@args);
 
     # DBIx::Class::Row::delete has a special edge case for calling
     # delete as a class method, we however can't log it in that case.
-    if ( ref $obj ) {
-        my %deleted = $obj->get_columns;
-        $obj->event( delete => { %deleted, details => \%deleted } );
+    if ( ref $self ) {
+        my %deleted = $self->get_columns;
+        $self->event( delete => { %deleted, details => \%deleted } );
     }
 
     return $ret;
