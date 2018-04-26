@@ -369,16 +369,16 @@ $schema->txn_do( sub {
     my $dtf = $schema->storage->datetime_parser;
     my $now = sub { $dtf->format_datetime( DateTime->now ) };
 
-    my %expect = ( $now->() => {} );
+    my %expect = ( $now->() => {next_calls => 1} );
     sleep 2;
 
     my $foo = $schema->resultset('Artist')->create( { name => 'foo' } );
     my %foo_state = ( artistid => $foo->id, name => 'foo' );
-    $expect{ $now->() } = { $foo->id => {%foo_state} };
+    $expect{ $now->() } = { next_calls => 1, $foo->id => {%foo_state} };
 
     # Before the insert, it should be undef
     $expect{ $dtf->format_datetime( DateTime->now->subtract( seconds => 1 ) ) }
-        = { $foo->id => undef };
+        = { next_calls => 1, $foo->id => undef };
     sleep 1;
 
     my $event_foo = $foo->change_name('Qux');
@@ -387,61 +387,96 @@ $schema->txn_do( sub {
     $foo->discard_changes;
     $foo_state{last_name_change_id} = $foo->last_name_change->id;
 
-    $expect{ $now->() } = { $foo->id => {%foo_state} };
+    $expect{ $now->() } = { next_calls => 2, $foo->id => {%foo_state}, };
     sleep 1;
 
     my $bar = $schema->resultset('Artist')->create( { name => 'bar' } );
     my %bar_state = ( artistid => $bar->id, name => 'bar' );
 
-    $expect{ $now->() }
-        = { $foo->id => {%foo_state}, $bar->id => {%bar_state} };
+    $expect{ $now->() } = {
+        next_calls => 2,
+        $foo->id   => {%foo_state},
+        $bar->id   => {%bar_state},
+    };
     sleep 1;
 
     $bar->name('baz');
     $bar_state{name} = 'baz';
     $bar->update;
 
-    $expect{ $now->() }
-        = { $foo->id => {%foo_state}, $bar->id => {%bar_state} };
+    $expect{ $now->() } = {
+        next_calls => 2,
+        $foo->id   => {%foo_state},
+        $bar->id   => {%bar_state},
+    };
     sleep 1;
 
     $foo->delete;
-    $expect{ $now->() } = { $foo->id => undef, $bar->id => {%bar_state} };
+    $expect{ $now->() }
+        = { next_calls => 1, $foo->id => undef, $bar->id => {%bar_state} };
     sleep 1;
 
     $foo = $schema->resultset('Artist')
         ->create( $foo->state_at( DateTime->now->subtract( seconds => 2 ) ) );
-    $expect{ $now->() }
-        = { $foo->id => {%foo_state}, $bar->id => {%bar_state} };
+    $expect{ $now->() } = {
+        next_calls => 1,
+        $foo->id   => {%foo_state},
+        $bar->id   => {%bar_state},
+    };
+    sleep 1;
+
+    $foo->event('update'); # no details
+    $expect{ $now->() } = {
+        next_calls => 2,
+        $foo->id   => {%foo_state},
+        $bar->id   => {%bar_state},
+    };
     sleep 1;
 
     $foo->update({ name => 'Foo', last_name_change_id => undef });
     $foo_state{name} = 'Foo';
     $foo_state{last_name_change_id} = undef;
-    $expect{ $now->() }
-        = { $foo->id => {%foo_state}, $bar->id => {%bar_state} };
+    $expect{ $now->() } = {
+        next_calls => 3,
+        $foo->id   => {%foo_state},
+        $bar->id   => {%bar_state},
+    };
     sleep 1;
 
     $foo->make_column_dirty('previousid');
     $foo->update;
     $foo_state{previousid} = undef;
-    $expect{ $now->() }
-        = { $foo->id => {%foo_state}, $bar->id => {%bar_state} };
+    $expect{ $now->() } = {
+        next_calls => 4,
+        $foo->id   => {%foo_state},
+        $bar->id   => {%bar_state},
+    };
     sleep 1;
 
     $foo->delete;
-    $expect{ $now->() } = { $foo->id => undef, $bar->id => {%bar_state} };
+    $expect{ $now->() }
+        = { next_calls => 1, $foo->id => undef, $bar->id => {%bar_state} };
     sleep 30;
 
     my $i = 0;
     foreach my $ts ( sort keys %expect ) {
         $i++;
 
+        my $next_calls = 0;
+        my $orig_next = \&DBIx::Class::ResultSet::next;
+        no warnings 'redefine';
+        local *DBIx::Class::ResultSet::next
+            = sub { $next_calls++; shift->$orig_next(@_); };
+        use warnings 'redefine';
+
         is_deeply(
             $foo->state_at($ts),
             $expect{$ts}{ $foo->id },
             "[$i][$ts] Expected Row structure"
         ) or diag explain [ $foo->id, $foo->state_at($ts), $expect{$ts} ];
+
+        is $next_calls, $expect{$ts}{next_calls},
+            "[$i][$ts] Called 'next' the expected number of times";
 
         # TODO: Add state_at as a resultset method
         #is_deeply $schema->resultset('Artist')->state_at($ts), $expect{$ts},
