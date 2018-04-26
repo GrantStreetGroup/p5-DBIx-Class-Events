@@ -447,7 +447,7 @@ $schema->txn_do( sub {
     $foo->update;
     $foo_state{previousid} = undef;
     $expect{ $now->() } = {
-        next_calls => 2,
+        next_calls => 4,
         $foo->id   => {%foo_state},
         $bar->id   => {%bar_state},
     };
