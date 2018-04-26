@@ -33,8 +33,6 @@ __PACKAGE__->has_many(
     { cascade_delete => 0 },
 );
 
-sub event_columns { return ( qw( title ), shift->next::method(@_) ) }
-
 sub event_defaults {
     my $self = shift;
     return ( title => 'N/A', $self->next::method(@_) );

@@ -22,15 +22,17 @@ sub event {
         $self->event_defaults($event, $col_data),
 
         # Ignore unknown columns when we enter the event.
+        # TODO: optimize the ->columns call
         map { $_ => $col_data->{$_} }
-            grep { exists $col_data->{$_} } $self->event_columns
+            grep { exists $col_data->{$_} }
+            $self->result_source
+              ->related_source( $self->events_relationship )->columns,
     );
 
     return $self->create_related( $self->events_relationship,
         { %col_data, event => $event } );
 }
 
-sub event_columns  { return qw( event triggered_on details ) }
 sub event_defaults {}
 
 sub state_at {
@@ -207,16 +209,6 @@ By default, C<events>, but you can overide it.
 
     __PACKAGE__->events_relationship('cd_events');
 
-=head2 event_columns
-
-Returns a list of columns that will be stored in the event.
-
-Subclasses should be sure to include the default columns.
-
-    sub event_columns {
-        return ( qw( any additional columns ), shift->next::method(@_) );
-    }
-
 =head2 event_defaults
 
 Returns an even-sized list of default values that will be used
@@ -238,12 +230,12 @@ Inserts a new event with L</event_defaults>.
 
     my $new_event = $artist->event( $event => \%params );
 
-Uses the L</event_columns> to determine which elements of C<%params>
-will be passed to C<create_related> to create the event.
+Filters C<%params> so only valid L</events_relationship> C<columns> are
+passed to C<create_related> to create the event.
 
-The C<$event> and reference to C<%params> are passed to L</event_defaults>,
+The C<$event> and a reference to C<%params> are passed to L</event_defaults>,
 which, although overridden by the chosen columns in C<%params>,
-is not filtered with C<event_columns>.
+is not checked for having valid columns.
 
 =head2 state_at
 
