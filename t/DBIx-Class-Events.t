@@ -407,6 +407,30 @@ $schema->txn_do( sub {
 
     $foo->delete;
     $expect{ $now->() } = { $foo->id => undef, $bar->id => {%bar_state} };
+    sleep 1;
+
+    $foo = $schema->resultset('Artist')
+        ->create( $foo->state_at( DateTime->now->subtract( seconds => 2 ) ) );
+    $expect{ $now->() }
+        = { $foo->id => {%foo_state}, $bar->id => {%bar_state} };
+    sleep 1;
+
+    $foo->update({ name => 'Foo', last_name_change_id => undef });
+    $foo_state{name} = 'Foo';
+    $foo_state{last_name_change_id} = undef;
+    $expect{ $now->() }
+        = { $foo->id => {%foo_state}, $bar->id => {%bar_state} };
+    sleep 1;
+
+    $foo->make_column_dirty('previousid');
+    $foo->update;
+    $foo_state{previousid} = undef;
+    $expect{ $now->() }
+        = { $foo->id => {%foo_state}, $bar->id => {%bar_state} };
+    sleep 1;
+
+    $foo->delete;
+    $expect{ $now->() } = { $foo->id => undef, $bar->id => {%bar_state} };
     sleep 30;
 
     my $i = 0;

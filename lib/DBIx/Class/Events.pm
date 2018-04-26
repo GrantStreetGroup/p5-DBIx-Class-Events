@@ -50,23 +50,22 @@ sub state_at {
         {
             select   => [ "$alias.event", "$alias.details" ],
             order_by => [
-                map {"$alias.$_"} 'triggered_on',
+                map {"$alias.$_ desc"} 'triggered_on',
                 $events->result_source->primary_columns
             ],
         } )->search(@args);
 
-    my $last_event;
-    my %state;
+    my $event = $events->next;
+    return undef if !$event or $event->event eq 'delete';
 
-    while ( my $event = $events->next ) {
-        $last_event = $event->event;
-        %state
-            = $last_event eq 'delete'
-            ? ()
-            : ( %state, %{ $event->details || {} } );
+    my %state;
+    while ($event) {
+        %state = ( %{ $event->details || {} }, %state );
+
+        last if $event->event eq 'insert';
+        $event = $events->next;
     }
 
-    return undef if !$last_event or $last_event eq 'delete';
     return \%state;
 }
 
