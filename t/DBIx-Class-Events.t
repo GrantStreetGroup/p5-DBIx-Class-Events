@@ -308,7 +308,7 @@ $schema->txn_do( sub {
 } );
 
 $schema->txn_do( sub {
-    note "Custom event fields";
+    note "Custom event columns";
 
     my $artist
         = $schema->resultset('Artist')->create( { name => 'An Artist' } );
@@ -325,11 +325,11 @@ $schema->txn_do( sub {
 
     is @events, 3, 'Three events';
     is $events[0]->event, 'insert', 'Insert event';
-    is $events[0]->title, 'A Track', 'Insert set custom field';
+    is $events[0]->title, 'A Track', 'Insert set custom column';
     is $events[1]->event, 'update', 'Update event';
-    is $events[1]->title, 'Modified Title', 'Update set custom field';
+    is $events[1]->title, 'Modified Title', 'Update set custom column';
     is $events[2]->event, 'delete', 'Delete event';
-    is $events[2]->title, 'Modified Title', 'Delete set custom field';
+    is $events[2]->title, 'Modified Title', 'Delete set custom column';
 
     $schema->txn_rollback;
 } );
@@ -352,11 +352,11 @@ $schema->txn_do( sub {
 
     is @events, 3, 'Three events';
     is $events[0]->event, 'insert', 'Insert event';
-    is $events[0]->title, 'A Track', 'Insert set custom field';
+    is $events[0]->title, 'A Track', 'Insert set custom column';
     is $events[1]->event, 'none', 'None event';
-    is $events[1]->title, 'N/A', 'None event set default field';
+    is $events[1]->title, 'N/A', 'None event set default column';
     is $events[2]->event, 'custom', 'Custom value event';
-    is $events[2]->title, 'Custom Value', 'Custom field set custom field';
+    is $events[2]->title, 'Custom Value', 'Custom event set custom column';
 
     $schema->txn_rollback;
 } );

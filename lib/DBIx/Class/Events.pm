@@ -21,16 +21,16 @@ sub event {
     my %col_data = (
         $self->event_defaults($event, $col_data),
 
-        # Ignore unknown fields when we enter the event.
+        # Ignore unknown columns when we enter the event.
         map { $_ => $col_data->{$_} }
-            grep { exists $col_data->{$_} } $self->event_fields
+            grep { exists $col_data->{$_} } $self->event_columns
     );
 
     return $self->create_related( $self->events_relationship,
         { %col_data, event => $event } );
 }
 
-sub event_fields   { return qw( event triggered_on details ) }
+sub event_columns  { return qw( event triggered_on details ) }
 sub event_defaults { return ( triggered_on => DateTime->now ) }
 
 sub state_at {
@@ -207,14 +207,14 @@ By default, C<events>, but you can overide it.
 
     __PACKAGE__->events_relationship('cd_events');
 
-=head2 event_fields
+=head2 event_columns
 
-Returns a list of fields that will be stored in the event.
+Returns a list of columns that will be stored in the event.
 
-Subclasses should be sure to include the default fields.
+Subclasses should be sure to include the default columns.
 
-    sub event_fields {
-        return ( qw( any additional fields ), shift->next::method(@_) );
+    sub event_columns {
+        return ( qw( any additional columns ), shift->next::method(@_) );
     }
 
 =head2 event_defaults
@@ -237,12 +237,12 @@ Inserts a new event with L</event_defaults>.
 
     my $new_event = $artist->event( $event => \%params );
 
-Uses the L</event_fields> to determine which elements of C<%params>
+Uses the L</event_columns> to determine which elements of C<%params>
 will be passed to C<create_related> to create the event.
 
 The C<$event> and reference to C<%params> are passed to L</event_defaults>,
-which, although overridden by the chosen fields in C<%params>,
-is not filtered with C<event_fields>.
+which, although overridden by the chosen columns in C<%params>,
+is not filtered with C<event_columns>.
 
 =head2 state_at
 
@@ -347,7 +347,7 @@ And you need a table to store the events:
 
     __PACKAGE__->set_primary_key('artisteventid');
 
-    # You should set up automatic inflation/deflation of the details field
+    # You should set up automatic inflation/deflation of the details column
     # as it is used this way by "state_at" and the insert/update/delete
     # events.  Does not have to be JSON, just a able to serialize a hashref.
     {
