@@ -205,82 +205,6 @@ Events can be used to track when things happen.
 
 =back
 
-=head1 BUGS AND LIMITATIONS
-
-There is no attempt to handle bulk updates or deletes,
-so any changes to the database made by calling
-L<"update"|DBIx::Class::ResultSet/update> or L<DBIx::Class::ResultSet/delete>
-will not create events the same as manual database modifications.
-
-Use the C<update_all> and C<delete_all> methods of the C<ResultSet> if you
-want these triggers.
-
-There are three required columns on the L</events_relationship> table,
-C<event>, C<triggered_on>, and C<details>.
-We should eventually make those configurable.
-
-=head1 METHODS
-
-=head2 event
-
-Inserts a new event with L</event_defaults>.
-
-    my $new_event = $artist->event( $event => \%params );
-
-First the L</event_defaults> method is called to build a list of values
-to set on the new event.
-This method is passed the C<$event> and a reference to C<%params>
-the return value is not checked for having valid columns.
-
-Then the C<%params>, filtered for valid L</events_relationship> C<columns>,
-are added to the C<create_related> arguments, overriding the defaults.
-
-=head2 state_at
-
-Takes a timestamp and returns the state of the thing at that timestamp as a
-hash reference.  Can be either a correctly deflated string or a DateTime
-object that will be deflated with C<format_datetime>.
-
-Returns undef if the object was not C<in_storage> at the timestamp.
-
-    my $state = $schema->resultset('Artist')->find( { name => 'David Bowie' } )
-        ->state_at('2006-05-29 08:00');
-
-An idea is to use it to recreate an object as it was at that timestamp.
-Of course default values that the database provides will not be included.
-
-    my $resurrected_object
-        = $object->result_source->new( $object->state_at($timestamp) );
-
-
-See L<DBIx::Class::Manual::FAQ/.. format a DateTime object for searching?>
-for details on formatting the timestamp.
-
-You can pass additional search conditions and attributes to this method.
-This is done in context of searching the events table.
-
-=head1 PRECONFIGURED EVENTS
-
-Automatically creates Events for actions that modify a row.
-
-See the L</BUGS AND LIMITATIONS> of bulk modifications on events.
-
-=over
-
-=item insert
-
-Logs all columns to the C<details> column.
-
-=item update
-
-Logs dirty columns to the C<details> column.
-
-=item delete
-
-Logs all columns to the C<details> column.
-
-=back
-
 =head1 CONFIGURATION AND ENVIRONMENT
 
 =head2 event_defaults
@@ -294,14 +218,14 @@ The C<$event_type> is a string defining the "type" of event being created.
 The C<%col_data> is a reference to the parameters passed in.
 
 No default values, but if your database doesn't set a default for
-C<triggered_on> you may want to set it to a C<< DateTime->now >> object.
+C<triggered_on>, you may want to set it to a C<< DateTime->now >> object.
 
 =head2 events_relationship
 
 An class accessor that returns the relationship to get from your object
 to the relationship.
 
-By default, C<events>, but you can overide it.
+Default is C<events>, but you can override it:
 
     __PACKAGE__->has_many(
         'cd_events' =>
@@ -330,8 +254,8 @@ It requires the Component and L</events_relationship> in the Result class:
         { cascade_delete => 0 },
     );
 
-You can also add custom events to track when something happens,
-for example to add events for when an artist changes their name.
+You can also add custom events to track when something happens.  For example,
+you can create a method to add events when an artist changes their name:
 
     __PACKAGE__->add_column(
         last_name_change_id => { data_type => 'integer' } );
@@ -416,6 +340,82 @@ You probably also want an index for searching for events:
         );
     }
 
+=head1 PRECONFIGURED EVENTS
+
+Automatically creates Events for actions that modify a row.
+
+See the L</BUGS AND LIMITATIONS> of bulk modifications on events.
+
+=over
+
+=item insert
+
+Logs all columns to the C<details> column, with an C<insert> event.
+
+=item update
+
+Logs dirty columns to the C<details> column, with an C<update> event.
+
+=item delete
+
+Logs all columns to the C<details> column, with a C<delete> event.
+
+=back
+
+=head1 METHODS
+
+=head2 event
+
+Inserts a new event with L</event_defaults>:
+
+    my $new_event = $artist->event( $event => \%params );
+
+First, the L</event_defaults> method is called to build a list of values
+to set on the new event.  This method is passed the C<$event> and a reference
+to C<%params>.
+
+Then, the C<%params>, filtered for valid L</events_relationship> C<columns>,
+are added to the C<create_related> arguments, overriding the defaults.
+
+=head2 state_at
+
+Takes a timestamp and returns the state of the thing at that timestamp as a
+hash reference.  Can be either a correctly deflated string or a DateTime
+object that will be deflated with C<format_datetime>.
+
+Returns undef if the object was not C<in_storage> at the timestamp.
+
+    my $state = $schema->resultset('Artist')->find( { name => 'David Bowie' } )
+        ->state_at('2006-05-29 08:00');
+
+An idea is to use it to recreate an object as it was at that timestamp.
+Of course, default values that the database provides will not be included,
+unless the L</event_defaults> method accounts for that.
+
+    my $resurrected_object
+        = $object->result_source->new( $object->state_at($timestamp) );
+
+See ".. format a DateTime object for searching?" under L<DBIx::Class::Manual::FAQ/Searching>
+for details on formatting the timestamp.
+
+You can pass additional L<search|DBIx::Class::ResultSet/search> conditions and
+attributes to this method.  This is done in context of searching the events
+table:
+
+    my $state = $object->state_at($timestamp, \%search_cond, \%search_attrs);
+
+=head1 BUGS AND LIMITATIONS
+
+There is no attempt to handle bulk updates or deletes.  So, any changes to the
+database made by calling
+L<"update"|DBIx::Class::ResultSet/update> or L<"delete"|DBIx::Class::ResultSet/delete>
+will not create events the same as L<single row|DBIx::Class::Row> modifications.  Use the
+L<"update_all"|DBIx::Class::ResultSet/update_all> or L<"delete_all"|DBIx::Class::ResultSet/delete_all>
+methods of the C<ResultSet> if you want these triggers.
+
+There are three required columns on the L</events_relationship> table:
+C<event>, C<triggered_on>, and C<details>.  We should eventually make those
+configurable.
 
 =head1 SEE ALSO
 
@@ -430,3 +430,7 @@ You probably also want an index for searching for events:
 =item L<DBIx::Class::PgLog>
 
 =back
+
+=cut
+
+1;
