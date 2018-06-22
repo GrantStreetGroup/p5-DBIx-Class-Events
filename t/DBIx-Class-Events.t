@@ -225,6 +225,41 @@ $schema->txn_do( sub {
 } );
 
 $schema->txn_do( sub {
+    note "Create event with duplicate PK";
+
+    my $artist = $schema->resultset('Artist')->create( { name => 'artist' } );
+    my $cd = $artist->create_related( cds => { title => 'a cd' } );
+    my $track1 = $cd->create_related( tracks => { title => 'a track' } );
+    my $existing_id = $track1->events->get_column('id')->min;
+
+    return "Fails with duplicate key exceptions";
+
+    my $track2 = $cd->create_related(
+        tracks => { title => 'track2', id => $existing_id } );
+
+    {
+        local $@;
+        eval { $track2->event( 'bar', { id => $existing_id } ) };
+        like $@, qr/UNIQUE constraint failed/,
+            "Can't insert an event with a duplicate id";
+    }
+
+    $track2->id( $track2->events->get_column('id')->min );
+    $track2->update;
+    $track2->delete;
+
+    my @events = $track2->events->search( {}, { order_by => 'id' } );
+
+    is @events, 3, 'three events';
+    is $events[0]->event, 'insert', 'Insert event';
+    is $events[1]->event, 'update', 'Update event';
+    is $events[2]->event, 'delete', 'Delete event';
+
+    $schema->txn_rollback;
+} );
+
+
+$schema->txn_do( sub {
     note "Bar event without details";
 
     my $artist
@@ -239,7 +274,7 @@ $schema->txn_do( sub {
     is $events[0]->event, 'insert', 'Insert event';
     is $events[1]->event, 'bar',    'Bar event';
 
-    is $events[1]->artistid, $artist->id, 'Foo event has correct artist';
+    is $events[1]->artistid, $artist->id, 'Bar event has correct artist';
     is_deeply $events[1]->details, undef, 'Bar event has no details';
 
     $schema->txn_rollback;
@@ -328,7 +363,7 @@ $schema->txn_do( sub {
     $track->update;
     $track->delete;
 
-    my @events = $track->events->search( {}, { order_by => 'trackeventid' } );
+    my @events = $track->events->search( {}, { order_by => 'id' } );
 
     is @events, 3, 'Three events';
     is $events[0]->event, 'insert', 'Insert event';
@@ -355,7 +390,7 @@ $schema->txn_do( sub {
     $track->event('none');
     $track->event( custom => { title => 'Custom Value' } );
 
-    my @events = $track->events->search( {}, { order_by => 'trackeventid' } );
+    my @events = $track->events->search( {}, { order_by => 'id' } );
 
     is @events, 3, 'Three events';
     is $events[0]->event, 'insert', 'Insert event';

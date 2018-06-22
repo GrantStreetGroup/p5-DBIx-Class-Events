@@ -46,6 +46,7 @@ CREATE INDEX "cd_event_idx_cd" ON "cd_event" ("cdid", "event", "triggered_on");
 CREATE TABLE "track" (
   "trackid" INTEGER PRIMARY KEY NOT NULL,
   "cdid" integer NOT NULL,
+  "id" varchar(16),
   "title" text NOT NULL,
   FOREIGN KEY ("cdid") REFERENCES "cd"("cdid") ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -55,7 +56,7 @@ CREATE INDEX "track_idx_cdid" ON "track" ("cdid");
 CREATE UNIQUE INDEX "track_title_cdid" ON "track" ("title", "cdid");
 
 CREATE TABLE "track_event" (
-    "trackeventid" INTEGER PRIMARY KEY NOT NULL,
+    "id" INTEGER PRIMARY KEY NOT NULL,
     "trackid" INTEGER NOT NULL,
     "event" VARCHAR(32) NOT NULL,
     "triggered_on" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

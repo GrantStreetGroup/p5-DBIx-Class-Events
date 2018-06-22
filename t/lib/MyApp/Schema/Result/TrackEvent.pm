@@ -11,7 +11,7 @@ __PACKAGE__->load_components(qw/ InflateColumn::DateTime /);
 __PACKAGE__->table('track_event');
 
 __PACKAGE__->add_columns(
-  trackeventid => {
+  id => {
     data_type => 'integer',
     is_auto_increment => 1
   },
@@ -32,7 +32,7 @@ __PACKAGE__->add_columns(
   },
 );
 
-__PACKAGE__->set_primary_key('trackeventid');
+__PACKAGE__->set_primary_key('id');
 
 {
     my $json = JSON::PP->new->utf8;
