@@ -77,7 +77,7 @@ sub insert {
     my $self = $class->next::method(@args);
 
     my %inserted = $self->get_columns;
-    $self->event( insert => { %inserted, details => \%inserted } );
+    $self->event( insert => { details => \%inserted } );
 
     return $self;
 };
@@ -93,7 +93,7 @@ sub update {
 
     $self->next::method();    # we already set_inflated_columns
 
-    $self->event( update => { %changed, details => \%changed } ) if %changed;
+    $self->event( update => { details => \%changed } ) if %changed;
 
     return $self;
 };
@@ -107,7 +107,7 @@ sub delete {
     # delete as a class method, we however can't log it in that case.
     if ( ref $self ) {
         my %deleted = $self->get_columns;
-        $self->event( delete => { %deleted, details => \%deleted } );
+        $self->event( delete => { details => \%deleted } );
     }
 
     return $ret;

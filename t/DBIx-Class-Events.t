@@ -232,8 +232,6 @@ $schema->txn_do( sub {
     my $track1 = $cd->create_related( tracks => { title => 'a track' } );
     my $existing_id = $track1->events->get_column('id')->min;
 
-    return "Fails with duplicate key exceptions";
-
     my $track2 = $cd->create_related(
         tracks => { title => 'track2', id => $existing_id } );
 
