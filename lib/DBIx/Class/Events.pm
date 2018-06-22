@@ -237,7 +237,9 @@ Default is C<events>, but you can override it:
 
 =head2 Tables
 
-=head3 Table with events
+=head3 Tracked Table
+
+The table with events to be tracked in the L</Tracking Table>.
 
 It requires the Component and L</events_relationship> in the Result class:
 
@@ -277,7 +279,9 @@ you can create a method to add events when an artist changes their name:
         $self->name( $new_name );
     }
 
-=head3 Table holding events
+=head3 Tracking Table
+
+This table holds the events for the L</Tracked Table>.
 
 The C<triggered_on> column must either provide a C<DEFAULT> value
 or you should add a default to L</event_defaults>.
