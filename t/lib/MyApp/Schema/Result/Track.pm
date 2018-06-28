@@ -17,6 +17,9 @@ __PACKAGE__->add_columns(
   cdid => {
     data_type => 'integer',
   },
+  id => {
+    data_type => 'varchar(16)',
+  },
   title => {
     data_type => 'text',
   },
@@ -34,8 +37,9 @@ __PACKAGE__->has_many(
 );
 
 sub event_defaults {
-    my $self = shift;
-    return ( title => 'N/A', $self->next::method(@_) );
+    my ($self, $event, $params) = @_;
+    my $title = $params->{details}->{title} || 'N/A';
+    return ( title => $title, $self->next::method(@_) );
 }
 
 1;

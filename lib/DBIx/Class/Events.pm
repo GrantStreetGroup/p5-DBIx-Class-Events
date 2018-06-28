@@ -77,7 +77,7 @@ sub insert {
     my $self = $class->next::method(@args);
 
     my %inserted = $self->get_columns;
-    $self->event( insert => { %inserted, details => \%inserted } );
+    $self->event( insert => { details => \%inserted } );
 
     return $self;
 };
@@ -93,7 +93,7 @@ sub update {
 
     $self->next::method();    # we already set_inflated_columns
 
-    $self->event( update => { %changed, details => \%changed } ) if %changed;
+    $self->event( update => { details => \%changed } ) if %changed;
 
     return $self;
 };
@@ -107,7 +107,7 @@ sub delete {
     # delete as a class method, we however can't log it in that case.
     if ( ref $self ) {
         my %deleted = $self->get_columns;
-        $self->event( delete => { %deleted, details => \%deleted } );
+        $self->event( delete => { details => \%deleted } );
     }
 
     return $ret;
@@ -237,7 +237,9 @@ Default is C<events>, but you can override it:
 
 =head2 Tables
 
-=head3 Table with events
+=head3 Tracked Table
+
+The table with events to be tracked in the L</Tracking Table>.
 
 It requires the Component and L</events_relationship> in the Result class:
 
@@ -277,7 +279,9 @@ you can create a method to add events when an artist changes their name:
         $self->name( $new_name );
     }
 
-=head3 Table holding events
+=head3 Tracking Table
+
+This table holds the events for the L</Tracked Table>.
 
 The C<triggered_on> column must either provide a C<DEFAULT> value
 or you should add a default to L</event_defaults>.
