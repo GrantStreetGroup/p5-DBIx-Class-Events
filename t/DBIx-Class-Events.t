@@ -8,6 +8,7 @@ use Test::Mock::Time ();
 use FindBin qw( $Bin );
 use lib "$Bin/lib";
 use MyApp::Schema;
+use DateTime;
 
 # for verify-cpanfile
 require DBD::SQLite;

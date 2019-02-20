@@ -3,12 +3,12 @@ package DBIx::Class::Events;
 # ABSTRACT: Store Events for your DBIC Results
 # VERSION
 
+use v5.10;
 use strict;
 use warnings;
 use parent 'DBIx::Class';
 
 use Carp;
-use DateTime;
 
 __PACKAGE__->mk_classdata( events_relationship => 'events' );
 
