@@ -11,4 +11,8 @@ test_requires 'Test::Mock::Time';
 test_requires 'DateTime';
 test_requires 'DateTime::Format::SQLite';
 
+test_requires 'Pod::Coverage::TrustPod';
+test_requires 'Test::Pod';
+test_requires 'Test::Pod::Coverage';
+
 1;
