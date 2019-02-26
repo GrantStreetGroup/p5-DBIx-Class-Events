@@ -132,7 +132,7 @@ $schema->txn_do( sub {
     my $artist
         = $schema->resultset('Artist')->create( { name => 'required' } );
     local $@;
-    eval { local $SIG{__DIE__}; $artist->event };
+    eval { local $SIG{__DIE__}; local $Carp::Verbose = 0; $artist->event };
     is $@, sprintf( "Event is required at %s line %d.\n",
         __FILE__, __LINE__ - 2 ),
         "Expected exception calling event without type";
