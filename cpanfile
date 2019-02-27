@@ -1,5 +1,3 @@
-use GSG::Gitc::CPANfile $_environment;
-
 requires 'DBIx::Class';
 
 test_requires 'DBD::SQLite';
