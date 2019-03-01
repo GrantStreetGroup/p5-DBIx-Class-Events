@@ -1,24 +1,16 @@
-PERL_CARTON_PERL5LIB := ./lib:$(PERL5LIB):$(PERL_CARTON_PERL5LIB)
-export PERL_CARTON_PERL5LIB
-
-CPANFILE := $(wildcard cpanfile cpanfile.prerelease/*)
-
-# Not sure how to use the .perl-version target before we have it
 CPANFILE_SNAPSHOT := $(shell \
-  PLENV_VERSION=$$( plenv which carton 2>&1 | grep '^  5' | tail -1 ); \
-  [ -n "$$PLENV_VERSION" ] && plenv local $$PLENV_VERSION; \
-  carton exec perl -MFile::Spec -E \
+  carton exec perl -MFile::Spec -e \
 	'($$_) = grep { -e } map{ "$$_/../../cpanfile.snapshot" } \
 		grep { m(/lib/perl5$$) } @INC; \
-		say File::Spec->abs2rel($$_) if $$_' )
+		print File::Spec->abs2rel($$_) . "\n" if $$_' 2>/dev/null )
 
 ifndef CPANFILE_SNAPSHOT
 	CPANFILE_SNAPSHOT := .MAKE
 endif
 
-.PHONY : test
+.PHONY : test REQUIRE_CARTON
 
-test : $(CPANFILE_SNAPSHOT)
+test : REQUIRE_CARTON $(CPANFILE_SNAPSHOT)
 	@nice carton exec prove -lfr t
 
 # This target requires that you add 'requires "Devel::Cover";'
@@ -26,9 +18,13 @@ test : $(CPANFILE_SNAPSHOT)
 testcoverage : $(CPANFILE_SNAPSHOT)
 	carton exec -- cover -test -ignore . -select ^lib
 
-$(CPANFILE_SNAPSHOT): .perl-version $(CPANFILE)
+$(CPANFILE_SNAPSHOT): cpanfile
 	carton install
 
-.perl-version:
-	plenv local $$( plenv whence carton | grep '^5' | tail -1 )
-
+REQUIRE_CARTON:
+	@if ! carton --version >/dev/null 2>&1 ; then \
+		echo You must install carton: https://metacpan.org/pod/Carton >&2; \
+		false; \
+	else \
+		true; \
+	fi
