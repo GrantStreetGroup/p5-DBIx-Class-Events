@@ -4,7 +4,7 @@ DBIx::Class::Events - Store Events for your DBIC Results
 
 # VERSION
 
-version 0.9.0
+version 0.9.1
 
 # SYNOPSIS
 
@@ -309,12 +309,18 @@ configurable.
 
 # AUTHOR
 
-Grant Street Group &lt;developers@grantstreet.com>
+Grant Street Group <developers@grantstreet.com>
 
 # COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2019 by Grant Street Group.
+This software is Copyright (c) 2018 - 2019 by Grant Street Group.
 
 This is free software, licensed under:
 
     The Artistic License 2.0 (GPL Compatible)
+
+# CONTRIBUTORS
+
+- Andrew Fresh <andrew.fresh@grantstreet.com>
+- Brendan Byrd <brendan.byrd@grantstreet.com>
+- Justin Wheeler <justin.wheeler@grantstreet.com>
