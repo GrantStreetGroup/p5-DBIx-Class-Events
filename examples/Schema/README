@@ -1,0 +1,38 @@
+The majority of this directory is copied from
+DBIx::Class' examples/Schema directory.
+
+Then modified to use DBIx::Class::Events' sample program.
+
+To create the databse using sqlite3:
+$ sqlite3 db/example.db < db/example.sqlite.sql
+
+To excute DBIx::Class' sample programs:
+$ perl DBIx-Class-insertdb.pl
+$ perl DBIx-Class-testdb.pl
+
+To excute DBIx::Class::Events' sample program:
+$ perl DBIx-Class-Events-testdb.pl
+
+To display changes to the database via the DBIx::Class::Events' sample program:
+$ sqlite3 db/example.db < db/Display.sqlite.sql
+
+Enjoy.
+
+.
+├── db
+│   ├── Display.sqlite.sql
+│   ├── example.db
+│   └── example.sqlite.sql
+├── DBIx-Class-Events-testdb.pl
+├── DBIx-Class-insertdb.pl
+├── DBIx-Class-testdb.pl
+├── MyApp
+│   ├── Schema
+│   │   └── Result
+│   │       ├── ArtistEvent.pm
+│   │       ├── Artist.pm
+│   │       ├── Cd.pm
+│   │       └── Track.pm
+│   └── Schema.pm
+└── README
+
