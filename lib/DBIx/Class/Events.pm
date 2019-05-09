@@ -148,8 +148,9 @@ in L</CONFIGURATION AND ENVIRONMENT>.
     # We can find out now when they broke up, if we remember their id.
     my $deleted_on
         = $schema->resultset('ArtistEvent')
-        ->single( { artistid => $artist->id, event => 'delete' } )
-        ->triggered_on;
+        ->search( { artistid => $artist->id, event => 'delete' },
+                  { order_by => { -desc => 'triggered_on'},     },)
+        ->first->triggered_on;
 
     # Find the state of the band was just before the breakup.
     my $state_before_breakup
@@ -259,8 +260,10 @@ It requires the Component and L</events_relationship> in the Result class:
 You can also add custom events to track when something happens.  For example,
 you can create a method to add events when an artist changes their name:
 
-    __PACKAGE__->add_column(
-        last_name_change_id => { data_type => 'integer' } );
+    __PACKAGE__->add_columns(
+        last_name_change_id => { data_type => 'integer' },
+        previousid          => { data_type => 'integer' },
+    );
 
     __PACKAGE__->has_one(
         'last_name_change'        => 'MyApp::Schema::Result::ArtistEvent',
