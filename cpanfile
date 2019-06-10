@@ -16,7 +16,7 @@ on 'test' => sub {
 };
 
 on 'develop' => sub {
-    requires 'Dist::Zilla::PluginBundle::Author::GSG',
+    requires 'Dist::Zilla::PluginBundle::Author::GSG';
 };
 
 1;
