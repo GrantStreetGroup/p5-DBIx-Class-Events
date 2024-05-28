@@ -328,6 +328,11 @@ or you should add a default to L</event_defaults>.
         } );
     }
 
+This C<belongs_to> relationship is optional,
+and the examples and tests assume if it exists,
+it is not a real database-enforced foreign key
+that will trigger constraint violations if the thing being tracked is deleted.
+
     # A path back to the object that this event is for,
     # not required unlike the has_many "events" relationship above
     __PACKAGE__->belongs_to(
@@ -362,6 +367,9 @@ Logs dirty columns to the C<details> column, with an C<update> event.
 =item delete
 
 Logs all columns to the C<details> column, with a C<delete> event.
+
+See the L</BUGS AND LIMITATIONS> for more information about
+using this method with a database enforced foreign key.
 
 =back
 
@@ -415,6 +423,11 @@ L<"update"|DBIx::Class::ResultSet/update> or L<"delete"|DBIx::Class::ResultSet/d
 will not create events the same as L<single row|DBIx::Class::Row> modifications.  Use the
 L<"update_all"|DBIx::Class::ResultSet/update_all> or L<"delete_all"|DBIx::Class::ResultSet/delete_all>
 methods of the C<ResultSet> if you want these triggers.
+
+If you create a database enforced C<belongs_to> foreign key relationship
+from the tracking table to the tracked table,
+and not only a L<DBIx::Class::Relationship/belongs_to>,
+deleting from the tracked table will fail due to those foreign key constraints.
 
 There are three required columns on the L</events_relationship> table:
 C<event>, C<triggered_on>, and C<details>.  We should eventually make those
