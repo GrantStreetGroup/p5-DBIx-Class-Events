@@ -101,8 +101,6 @@ sub update {
 sub delete {
     my ( $self, @args ) = @_;
 
-    my $ret = $self->next::method(@args);
-
     # DBIx::Class::Row::delete has a special edge case for calling
     # delete as a class method, we however can't log it in that case.
     if ( ref $self ) {
@@ -110,7 +108,8 @@ sub delete {
         $self->event( delete => { details => \%deleted } );
     }
 
-    return $ret;
+    return $self->next::method(@args);
+
 };
 
 1;
