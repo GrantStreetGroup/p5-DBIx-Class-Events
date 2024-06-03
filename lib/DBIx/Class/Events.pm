@@ -328,7 +328,8 @@ or you should add a default to L</event_defaults>.
         } );
     }
 
-This C<belongs_to> relationship is optional,
+This L<C<belongs_to>|DBIx::Class::Relationship/belongs_to>
+relationship is optional,
 and the examples and tests assume if it exists,
 it is not a real database-enforced foreign key
 that will trigger constraint violations if the thing being tracked is deleted.
@@ -424,10 +425,10 @@ will not create events the same as L<single row|DBIx::Class::Row> modifications.
 L<"update_all"|DBIx::Class::ResultSet/update_all> or L<"delete_all"|DBIx::Class::ResultSet/delete_all>
 methods of the C<ResultSet> if you want these triggers.
 
-If you create a database enforced C<belongs_to> foreign key relationship
-from the tracking table to the tracked table,
-and not only a L<DBIx::Class::Relationship/belongs_to>,
-deleting from the tracked table will fail due to those foreign key constraints.
+If you create the C<belongs_to> relationship
+described under L</Tracking Table>
+as a database-enforced foreign key
+then deleting from the tracked table will fail due to those constraints.
 
 There are three required columns on the L</events_relationship> table:
 C<event>, C<triggered_on>, and C<details>.  We should eventually make those
