@@ -4,7 +4,7 @@ DBIx::Class::Events - Store Events for your DBIC Results
 
 # VERSION
 
-version 0.9.1
+version v0.9.3
 
 # SYNOPSIS
 
@@ -212,6 +212,11 @@ or you should add a default to ["event\_defaults"](#event_defaults).
         } );
     }
 
+This `belongs_to` relationship is optional,
+and the examples and tests assume if it exists,
+it is not a real database-enforced foreign key
+that will trigger constraint violations if the thing being tracked is deleted.
+
     # A path back to the object that this event is for,
     # not required unlike the has_many "events" relationship above
     __PACKAGE__->belongs_to(
@@ -244,6 +249,9 @@ See the ["BUGS AND LIMITATIONS"](#bugs-and-limitations) of bulk modifications on
 - delete
 
     Logs all columns to the `details` column, with a `delete` event.
+
+    See the ["BUGS AND LIMITATIONS"](#bugs-and-limitations) for more information about
+    using this method with a database enforced foreign key.
 
 # METHODS
 
@@ -278,10 +286,10 @@ unless the ["event\_defaults"](#event_defaults) method accounts for that.
     my $resurrected_object
         = $object->result_source->new( $object->state_at($timestamp) );
 
-See ".. format a DateTime object for searching?" under ["Searching" in DBIx::Class::Manual::FAQ](https://metacpan.org/pod/DBIx::Class::Manual::FAQ#Searching)
+See ".. format a DateTime object for searching?" under ["Searching" in DBIx::Class::Manual::FAQ](https://metacpan.org/pod/DBIx%3A%3AClass%3A%3AManual%3A%3AFAQ#Searching)
 for details on formatting the timestamp.
 
-You can pass additional [search](https://metacpan.org/pod/DBIx::Class::ResultSet#search) conditions and
+You can pass additional [search](https://metacpan.org/pod/DBIx%3A%3AClass%3A%3AResultSet#search) conditions and
 attributes to this method.  This is done in context of searching the events
 table:
 
@@ -291,10 +299,15 @@ table:
 
 There is no attempt to handle bulk updates or deletes.  So, any changes to the
 database made by calling
-["update"](https://metacpan.org/pod/DBIx::Class::ResultSet#update) or ["delete"](https://metacpan.org/pod/DBIx::Class::ResultSet#delete)
-will not create events the same as [single row](https://metacpan.org/pod/DBIx::Class::Row) modifications.  Use the
-["update\_all"](https://metacpan.org/pod/DBIx::Class::ResultSet#update_all) or ["delete\_all"](https://metacpan.org/pod/DBIx::Class::ResultSet#delete_all)
+["update"](https://metacpan.org/pod/DBIx%3A%3AClass%3A%3AResultSet#update) or ["delete"](https://metacpan.org/pod/DBIx%3A%3AClass%3A%3AResultSet#delete)
+will not create events the same as [single row](https://metacpan.org/pod/DBIx%3A%3AClass%3A%3ARow) modifications.  Use the
+["update\_all"](https://metacpan.org/pod/DBIx%3A%3AClass%3A%3AResultSet#update_all) or ["delete\_all"](https://metacpan.org/pod/DBIx%3A%3AClass%3A%3AResultSet#delete_all)
 methods of the `ResultSet` if you want these triggers.
+
+If you create a database enforced `belongs_to` foreign key relationship
+from the tracking table to the tracked table,
+and not only a ["belongs\_to" in DBIx::Class::Relationship](https://metacpan.org/pod/DBIx%3A%3AClass%3A%3ARelationship#belongs_to),
+deleting from the tracked table will fail due to those foreign key constraints.
 
 There are three required columns on the ["events\_relationship"](#events_relationship) table:
 `event`, `triggered_on`, and `details`.  We should eventually make those
@@ -302,10 +315,10 @@ configurable.
 
 # SEE ALSO
 
-- [DBIx::Class::AuditAny](https://metacpan.org/pod/DBIx::Class::AuditAny)
-- [DBIx::Class::AuditLog](https://metacpan.org/pod/DBIx::Class::AuditLog)
-- [DBIx::Class::Journal](https://metacpan.org/pod/DBIx::Class::Journal)
-- [DBIx::Class::PgLog](https://metacpan.org/pod/DBIx::Class::PgLog)
+- [DBIx::Class::AuditAny](https://metacpan.org/pod/DBIx%3A%3AClass%3A%3AAuditAny)
+- [DBIx::Class::AuditLog](https://metacpan.org/pod/DBIx%3A%3AClass%3A%3AAuditLog)
+- [DBIx::Class::Journal](https://metacpan.org/pod/DBIx%3A%3AClass%3A%3AJournal)
+- [DBIx::Class::PgLog](https://metacpan.org/pod/DBIx%3A%3AClass%3A%3APgLog)
 
 # AUTHOR
 
@@ -313,14 +326,8 @@ Grant Street Group <developers@grantstreet.com>
 
 # COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2018 - 2019 by Grant Street Group.
+This software is Copyright (c) 2018 - 2024 by Grant Street Group.
 
 This is free software, licensed under:
 
     The Artistic License 2.0 (GPL Compatible)
-
-# CONTRIBUTORS
-
-- Andrew Fresh <andrew.fresh@grantstreet.com>
-- Brendan Byrd <brendan.byrd@grantstreet.com>
-- Justin Wheeler <justin.wheeler@grantstreet.com>
