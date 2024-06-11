@@ -212,7 +212,8 @@ or you should add a default to ["event\_defaults"](#event_defaults).
         } );
     }
 
-This `belongs_to` relationship is optional,
+This [`belongs_to`](https://metacpan.org/pod/DBIx%3A%3AClass%3A%3ARelationship#belongs_to)
+relationship is optional,
 and the examples and tests assume if it exists,
 it is not a real database-enforced foreign key
 that will trigger constraint violations if the thing being tracked is deleted.
@@ -304,10 +305,10 @@ will not create events the same as [single row](https://metacpan.org/pod/DBIx%3A
 ["update\_all"](https://metacpan.org/pod/DBIx%3A%3AClass%3A%3AResultSet#update_all) or ["delete\_all"](https://metacpan.org/pod/DBIx%3A%3AClass%3A%3AResultSet#delete_all)
 methods of the `ResultSet` if you want these triggers.
 
-If you create a database enforced `belongs_to` foreign key relationship
-from the tracking table to the tracked table,
-and not only a ["belongs\_to" in DBIx::Class::Relationship](https://metacpan.org/pod/DBIx%3A%3AClass%3A%3ARelationship#belongs_to),
-deleting from the tracked table will fail due to those foreign key constraints.
+If you create the `belongs_to` relationship
+described under ["Tracking Table"](#tracking-table)
+as a database-enforced foreign key
+then deleting from the tracked table will fail due to those constraints.
 
 There are three required columns on the ["events\_relationship"](#events_relationship) table:
 `event`, `triggered_on`, and `details`.  We should eventually make those
